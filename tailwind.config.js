@@ -10,8 +10,16 @@ module.exports = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'forestGreenLight': '#3f3f3f',
+        'forestGreenMedium': '#464b37',
+        'forestGreenDark': '#afb4ad',
+        'forestGray': '#656963',
+        'lightBlack' : '#3b3b3b',
+        'gradientStart': '#f0fcab',
+        'gradientEnd': '#60bf8f'
       },
     },
   },
   plugins: [],
 };
+
