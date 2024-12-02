@@ -7,6 +7,7 @@ export default function PokemonList() {
   const [pokemon, setPokemon] = useState([]);
   const [error, setError] = useState(null);
   const { user } = useUserAuth();
+  const [pokemonFilter, setPokemonFilter] = useState("");
 
   const pokemonGoShinyIds = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -59,8 +60,20 @@ export default function PokemonList() {
     761, 762, 763, 765, 766, 767, 768, 775, 776, 777, 780, 782, 783, 784, 785,
     786, 787, 788, 793, 794, 795, 796, 797, 798, 799, 800, 808, 809, 819, 820,
     831, 832, 848, 849, 862, 863, 865, 866, 867, 870, 888, 889, 899, 900, 901,
-    903, 904, 915, 916, 928, 929, 930, 962, 979, 980
+    903, 904, 915, 916, 928, 929, 930, 962, 979, 980,
   ];
+
+  const pokemonGenerations = {
+    Gen1: { start: 1, end: 151 },
+    Gen2: { start: 152, end: 251 },
+    Gen3: { start: 252, end: 386 },
+    Gen4: { start: 387, end: 493 },
+    Gen5: { start: 494, end: 649 },
+    Gen6: { start: 650, end: 721 },
+    Gen7: { start: 722, end: 809 },
+    Gen8: { start: 810, end: 905 },
+    Gen9: { start: 906, end: 980 },
+  };
 
   async function fetchPokemonData() {
     try {
@@ -76,16 +89,34 @@ export default function PokemonList() {
       console.error("Error fetching the Pokémon data:", error);
       setError("Error fetching the Pokémon data. Please try again later.");
     }
-  }
+  };
+
+  const handleFilter = (filter) => {
+    setPokemonFilter(filter);
+  };
+
+  const filteredPokemon = pokemonFilter
+    ? pokemon.filter((p) => {
+        if (pokemonGenerations[pokemonFilter]) {
+          const { start, end } = pokemonGenerations[pokemonFilter];
+          return p.id >= start && p.id <= end;
+        }
+      })
+    : pokemon;
 
   const renderPokemon = () => {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-5">
-        {pokemon.map((pokemon) => {
-          const shinySprite = `https://db.pokemongohub.net/images/ingame/normal/pm${pokemon.id}.s.icon.png`;
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+        {filteredPokemon.map((pokemon) => {
+          let shinySprite = `https://db.pokemongohub.net/images/ingame/normal/pm${pokemon.id}.s.icon.png`;
 
           return (
-            <Pokemon key={pokemon.id} name={pokemon.name} id={pokemon.id} shinySprite={shinySprite} />
+            <Pokemon
+              key={pokemon.id}
+              name={pokemon.name}
+              id={pokemon.id}
+              shinySprite={shinySprite}
+            />
           );
         })}
       </div>
@@ -100,7 +131,33 @@ export default function PokemonList() {
     <div className="container mx-auto p-4 mt-20">
       {user ? (
         <>
-          <h1 className="text-2xl font-bold text-center mb-10 text-black"> {user.displayName}'s ShinyDex</h1>
+          <div className="bg-forestGreenMedium text-orange-300 p-5 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between rounded">
+            <h1 className="text-2xl font-bold text-left">
+              {user.displayName}'s ShinyDex
+            </h1>
+            <div className="mt-4 md:mt-0 flex flex-wrap">
+              {/* Generation Filter Buttons */}
+              {Object.keys(pokemonGenerations).map((gen) => (
+                <button
+                  key={gen}
+                  className={`mr-2 mb-2 px-4 py-2 rounded ${
+                    pokemonFilter === gen
+                      ? "bg-green-500 text-white"
+                      : "bg-orange-400 text-white"
+                  }`}
+                  onClick={() => handleFilter(gen)}
+                >
+                  {gen}
+                </button>
+              ))}
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded"
+                onClick={() => handleFilter("")}
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
           {error ? (
             <p className="text-center text-red-500">{error}</p>
           ) : (
@@ -109,8 +166,12 @@ export default function PokemonList() {
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold text-center mb-10">ShinyDex</h1>
-          <p className="text-center">Please sign in to view your ShinyDex</p>
+          <h1 className="text-2xl font-bold text-center mb-10 text-black">
+            ShinyDex
+          </h1>
+          <p className="text-center text-black">
+            Please sign in to view your ShinyDex
+          </p>
         </>
       )}
     </div>
