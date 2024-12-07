@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthProvider, useUserAuth } from "./_utils/auth-context";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 
 function SignInPageContent() {
   const { user, signInWithGoogle } = useUserAuth();
@@ -52,7 +52,7 @@ function SignInPageContent() {
               Your Personal Pokemon GO Shiny Collection
             </h1>
             <button
-              className="mt-10 px-4 py-2 border flex items-center gap-2 dark:bg-gray-800 border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-300 hover:shadow transition duration-150"
+              className="mt-10 px-4 py-2 border flex items-center gap-2 bg-gray-800 dark:bg-gray-800 border-slate-200 dark:border-slate-700 rounded-lg text-slate-200 dark:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-300 dark:hover:text-slate-300 hover:shadow transition duration-150"
               onClick={handleSignIn}
             >
               <img

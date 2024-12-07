@@ -2,12 +2,20 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Pokemon from "./pokemon";
 import { useUserAuth } from "../_utils/auth-context";
+import {
+  getPokemon,
+  addPokemon,
+  removePokemon,
+} from "../_services/shiny-collection-service";
 
 export default function PokemonList() {
   const [pokemon, setPokemon] = useState([]);
   const [error, setError] = useState(null);
   const { user } = useUserAuth();
   const [pokemonFilter, setPokemonFilter] = useState("");
+  const [selectedPokemon, setSelectedPokemon] = useState([]);
+  const [shinyCounter, setShinyCounter] = useState(0);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
 
   const pokemonGoShinyIds = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -64,15 +72,17 @@ export default function PokemonList() {
   ];
 
   const pokemonGenerations = {
-    Gen1: { start: 1, end: 151 },
-    Gen2: { start: 152, end: 251 },
-    Gen3: { start: 252, end: 386 },
-    Gen4: { start: 387, end: 493 },
-    Gen5: { start: 494, end: 649 },
-    Gen6: { start: 650, end: 721 },
-    Gen7: { start: 722, end: 809 },
-    Gen8: { start: 810, end: 905 },
-    Gen9: { start: 906, end: 980 },
+    Kanto: { start: 1, end: 151 },
+    Johto: { start: 152, end: 251 },
+    Hoenn: { start: 252, end: 385 },
+    Sinnoh: { start: 387, end: 492 },
+    Unova: { start: 494, end: 649 },
+    Kalos: { start: 650, end: 720 },
+    Alola: { start: 722, end: 806 },
+    Galar: { start: 810, end: 895 },
+    Hisui: { start: 899, end: 905 },
+    Paldea: { start: 906, end: 980 },
+    Unknown: { start: 808, end: 809 },
   };
 
   async function fetchPokemonData() {
@@ -89,10 +99,11 @@ export default function PokemonList() {
       console.error("Error fetching the Pokémon data:", error);
       setError("Error fetching the Pokémon data. Please try again later.");
     }
-  };
+  }
 
   const handleFilter = (filter) => {
     setPokemonFilter(filter);
+    setDropdownVisible(false);
   };
 
   const filteredPokemon = pokemonFilter
@@ -104,19 +115,56 @@ export default function PokemonList() {
       })
     : pokemon;
 
+  const handleSelectPokemon = async (id) => {
+    if (!user) return;
+
+    if (selectedPokemon.includes(id)) {
+      setSelectedPokemon((prevSelected) =>
+        prevSelected.filter((pokeId) => pokeId !== id)
+      );
+      if (pokemonGoShinyIds.includes(id)) {
+        setShinyCounter((prev) => prev - 1);
+      }
+      try {
+        await removePokemon(user.uid, id);
+      } catch (error) {
+        console.error("Error removing Pokémon:", error);
+      }
+    } else {
+      setSelectedPokemon((prevSelected) => [...prevSelected, id]);
+      if (pokemonGoShinyIds.includes(id)) {
+        setShinyCounter((prev) => prev + 1);
+      }
+      try {
+        await addPokemon(user.uid, id);
+      } catch (error) {
+        console.error("Error adding Pokémon:", error);
+      }
+    }
+  };
+
   const renderPokemon = () => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
         {filteredPokemon.map((pokemon) => {
           let shinySprite = `https://db.pokemongohub.net/images/ingame/normal/pm${pokemon.id}.s.icon.png`;
+          const isSelected = selectedPokemon.includes(pokemon.id);
 
           return (
-            <Pokemon
+            <div
               key={pokemon.id}
-              name={pokemon.name}
-              id={pokemon.id}
-              shinySprite={shinySprite}
-            />
+              onClick={() => handleSelectPokemon(pokemon.id)}
+              className={`cursor-pointer ${
+                isSelected ? "bg-orange-300" : "bg-slate-600"
+              } rounded-lg p-4 hover:shadow-lg transition-shadow`}
+            >
+              <Pokemon
+                key={pokemon.id}
+                name={pokemon.name}
+                id={pokemon.id}
+                shinySprite={shinySprite}
+              />
+            </div>
           );
         })}
       </div>
@@ -127,6 +175,25 @@ export default function PokemonList() {
     fetchPokemonData();
   }, []);
 
+  useEffect(() => {
+    const fetchSelectedPokemon = async () => {
+      if (user) {
+        try {
+          const selected = await getPokemon(user.uid);
+          setSelectedPokemon(selected);
+          const shinyCount = selected.length;
+          setShinyCounter(shinyCount);
+        } catch {
+          console.error("Error fetching selected Pokémon");
+        }
+      } else {
+        setSelectedPokemon([]);
+        setShinyCounter(0);
+      }
+    };
+    fetchSelectedPokemon();
+  }, [user]);
+
   return (
     <div className="container mx-auto p-4 mt-20">
       {user ? (
@@ -135,27 +202,43 @@ export default function PokemonList() {
             <h1 className="text-2xl font-bold text-left">
               {user.displayName}'s ShinyDex
             </h1>
-            <div className="mt-4 md:mt-0 flex flex-wrap">
-              {/* Generation Filter Buttons */}
-              {Object.keys(pokemonGenerations).map((gen) => (
-                <button
-                  key={gen}
-                  className={`mr-2 mb-2 px-4 py-2 rounded ${
-                    pokemonFilter === gen
-                      ? "bg-green-500 text-white"
-                      : "bg-orange-400 text-white"
-                  }`}
-                  onClick={() => handleFilter(gen)}
-                >
-                  {gen}
-                </button>
-              ))}
+            <p>
+              Collected: {shinyCounter} / {pokemonGoShinyIds.length}{" "}
+            </p>
+            <div className="relative mt-4 md:mt-0 flex items-center gap-2">
               <button
-                className="px-4 py-2 bg-gray-500 text-white rounded"
+                className={`px-4 py-2 rounded text-white dark:text-white ${
+                  pokemonFilter
+                    ? "bg-green-500 dark:bg-green-500"
+                    : "bg-gray-500 dark:bg-gray-500"
+                }`}
+                onClick={() => setDropdownVisible(!dropdownVisible)}
+              >
+                Filter Pokemon
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded dark:bg-gray-500 dark:text-white"
                 onClick={() => handleFilter("")}
               >
                 Clear Filters
               </button>
+              {dropdownVisible && (
+                <div className="absolute top-full mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-10">
+                  {Object.keys(pokemonGenerations).map((gen) => (
+                    <button
+                      key={gen}
+                      className={`block w-full text-left px-4 py-2 ${
+                        pokemonFilter === gen
+                          ? "bg-green-500 text-white dark:bg-green-500 dark:text-white"
+                          : "bg-orange-400 text-white dark:bg-orange-400 dark:text-white"
+                      }`}
+                      onClick={() => handleFilter(gen)}
+                    >
+                      {gen}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           {error ? (
