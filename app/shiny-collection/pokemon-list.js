@@ -497,7 +497,7 @@ export default function PokemonList() {
           <div className="bg-forestGreenMedium text-orange-300 p-5 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between rounded">
             <div className="flex flex-col items-center justify-center">
               <h1 className="text-2xl font-bold text-left">
-                {user.displayName}'s ShinyDex
+                {user.displayName}&apos;s ShinyDex
               </h1>
               <button
                 className="text-orange-300 hover:underline mt-2 font-semibold"
