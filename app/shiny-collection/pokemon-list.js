@@ -6,6 +6,9 @@ import {
   getPokemon,
   addPokemon,
   removePokemon,
+  getAchievements,
+  addAchievement,
+  removeAchievement,
 } from "../_services/shiny-collection-service";
 
 export default function PokemonList() {
@@ -16,6 +19,10 @@ export default function PokemonList() {
   const [selectedPokemon, setSelectedPokemon] = useState([]);
   const [shinyCounter, setShinyCounter] = useState(0);
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [viewSelected, setViewSelected] = useState(false);
+  const [achievementsUnlocked, setAchievementsUnlocked] = useState([]);
+  const [showAchievements, setShowAchievements] = useState(false);
+  const [achievementPopup, setAchievementPopup] = useState(null);
 
   const pokemonGoShinyIds = [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
@@ -85,6 +92,146 @@ export default function PokemonList() {
     Unknown: { start: 808, end: 809 },
   };
 
+  const achievements = [
+    {
+      id: 1,
+      name: "Beginner Shiny Collector",
+      description: "Collect 10 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 10,
+      progress: (shinyCounter) => (shinyCounter / 10) * 100,
+    },
+    {
+      id: 2,
+      name: "Bronze I Shiny Collector",
+      description: "Collect 25 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 25,
+      progress: (shinyCounter) => (shinyCounter / 25) * 100,
+    },
+    {
+      id: 3,
+      name: "Bronze II Shiny Collector",
+      description: "Collect 50 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 50,
+      progress: (shinyCounter) => (shinyCounter / 50) * 100,
+    },
+    {
+      id: 4,
+      name: "Bronze III Shiny Collector",
+      description: "Collect 75 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 75,
+      progress: (shinyCounter) => (shinyCounter / 75) * 100,
+    },
+    {
+      id: 5,
+      name: "I've a Feeling We're Not In Pallet Town Anymore...",
+      description: "Collect 100 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 100,
+      progress: (shinyCounter) => (shinyCounter / 100) * 100,
+    },
+    {
+      id: 6,
+      name: "Silver I Shiny Collector",
+      description: "Collect 150 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 150,
+      progress: (shinyCounter) => (shinyCounter / 150) * 100,
+    },
+    {
+      id: 7,
+      name: "Silver II Shiny Collector",
+      description: "Collect 200 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 200,
+      progress: (shinyCounter) => (shinyCounter / 200) * 100,
+    },
+    {
+      id: 8,
+      name: "Silver III Shiny Collector",
+      description: "Collect 250 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 250,
+      progress: (shinyCounter) => (shinyCounter / 250) * 100,
+    },
+    {
+      id: 9,
+      name: "Shiny Enthusiast",
+      description: "Collect 300 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 300,
+      progress: (shinyCounter) => (shinyCounter / 300) * 100,
+    },
+    {
+      id: 10,
+      name: "Gold I Shiny Collector",
+      description: "Collect 350 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 350,
+      progress: (shinyCounter) => (shinyCounter / 350) * 100,
+    },
+    {
+      id: 11,
+      name: "Gold II Shiny Collector",
+      description: "Collect 400 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 400,
+      progress: (shinyCounter) => (shinyCounter / 400) * 100,
+    },
+    {
+      id: 12,
+      name: "Gold III Shiny Collector",
+      description: "Collect 450 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 450,
+      progress: (shinyCounter) => (shinyCounter / 450) * 100,
+    },
+    {
+      id: 13,
+      name: "Shiny Master",
+      description: "Collect 500 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 500,
+      progress: (shinyCounter) => (shinyCounter / 500) * 100,
+    },
+    {
+      id: 14,
+      name: "Emerald I Shiny Collector",
+      description: "Collect 575 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 575,
+      progress: (shinyCounter) => (shinyCounter / 575) * 100,
+    },
+    {
+      id: 15,
+      name: "Emerald II Shiny Collector",
+      description: "Collect 650 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 650,
+      progress: (shinyCounter) => (shinyCounter / 650) * 100,
+    },
+    {
+      id: 16,
+      name: "Emerald III Shiny Collector",
+      description: "Collect 725 Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 725,
+      progress: (shinyCounter) => (shinyCounter / 725) * 100,
+    },
+    {
+      id: 17,
+      name: "Gotta Catch 'Em All!",
+      description: "Collect All Shiny Pokémon",
+      criteria: (shinyCounter) => shinyCounter >= 782,
+      progress: (shinyCounter) => (shinyCounter / 782) * 100,
+    },
+  ];
+
+  Object.keys(pokemonGenerations).forEach((gen, index) => {
+    const { start, end } = pokemonGenerations[gen];
+    const genIds = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+
+    achievements.push({
+      id: 18 + index,
+      name: `${gen} Mastery`,
+      description: `Collect All Shiny Pokémon From The ${gen} Region.`,
+      criteria: () => genIds.every((id) => selectedPokemon.includes(id)),
+      progress: () => {
+        const collected = genIds.filter((id) =>
+          selectedPokemon.includes(id)
+        ).length;
+        return (collected / genIds.length) * 100;
+      },
+    });
+  });
+
   async function fetchPokemonData() {
     try {
       const requests = pokemonGoShinyIds.map((id) =>
@@ -143,6 +290,33 @@ export default function PokemonList() {
     }
   };
 
+  const ProgressBar = ({ progress }) => {
+    return (
+      <div className="w-full rounded-full h-4 bg-gray-700 dark:bg-gray-700">
+        <div
+          className="bg-green-500 h-4 rounded-full"
+          style={{ width: `${progress}%` }}
+        ></div>
+      </div>
+    );
+  };
+
+  const AchievementPopup = ({ achievement }) => {
+    return (
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white p-10 rounded-lg shadow-lg z-50 text-center">
+        <h3 className="font-bold text-4xl">Achievement Unlocked!</h3>
+        <p>{achievement.name}</p>
+      </div>
+    );
+  };
+
+  const showAchievementPopup = (achievement) => {
+    setAchievementPopup(achievement);
+    setTimeout(() => {
+      setAchievementPopup(null);
+    }, 4000);
+  };
+
   const renderPokemon = () => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
@@ -155,7 +329,7 @@ export default function PokemonList() {
               key={pokemon.id}
               onClick={() => handleSelectPokemon(pokemon.id)}
               className={`cursor-pointer ${
-                isSelected ? "bg-orange-300" : "bg-slate-600"
+                isSelected ? "bg-orange-400" : "bg-slate-600"
               } rounded-lg p-4 hover:shadow-lg transition-shadow`}
             >
               <Pokemon
@@ -167,6 +341,78 @@ export default function PokemonList() {
             </div>
           );
         })}
+      </div>
+    );
+  };
+
+  const renderSelectedPokemon = () => {
+    const sortedSelectedPokemon = [...selectedPokemon].sort((a, b) => a - b);
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-5">
+        {sortedSelectedPokemon.map((id) => {
+          const pokemon = filteredPokemon.find((p) => p.id === id);
+
+          if (!pokemon) {
+            return null;
+          }
+
+          let shinySprite = `https://db.pokemongohub.net/images/ingame/normal/pm${pokemon.id}.s.icon.png`;
+          const isSelected = selectedPokemon.includes(pokemon.id);
+
+          return (
+            <div
+              key={pokemon.id}
+              onClick={() => handleSelectPokemon(pokemon.id)}
+              className={`cursor-pointer ${
+                isSelected ? "bg-orange-400" : "bg-slate-600"
+              } rounded-lg p-4 hover:shadow-lg transition-shadow`}
+            >
+              <Pokemon
+                name={pokemon.name}
+                id={pokemon.id}
+                shinySprite={shinySprite}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderAchievements = () => {
+    return (
+      <div className="bg-forestGreenMedium dark:bg-forestGreenMedium p-4 rounded-lg shadow-md mt-5">
+        <h2 className="text-2xl font-bold mb-4 text-orange-300 text-center">
+          Achievements
+        </h2>
+        <ul>
+          {achievements.map((achievement) => {
+            const isUnlocked = achievementsUnlocked.includes(achievement.id);
+            const progress = achievement.progress(
+              shinyCounter,
+              selectedPokemon
+            );
+            const progressPercentage = Math.min(progress, 100).toFixed(2); // Ensure the percentage does not exceed 100
+
+            return (
+              <li
+                key={achievement.id}
+                className={`mb-2 p-2 rounded ${
+                  isUnlocked ? "bg-green-500 text-white dark:text-white" : "bg-gray-600 text-white dark:text-white"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-xl">{achievement.name}</h3>
+                  <span className="font-semibold">{progressPercentage}%</span>
+                </div>
+                <p>{achievement.description}</p>
+                {!isUnlocked && <ProgressBar progress={progress} />}
+                {isUnlocked && <p className="font-bold">Complete!</p>}
+              </li>
+            );
+          })}
+        </ul>
       </div>
     );
   };
@@ -194,17 +440,87 @@ export default function PokemonList() {
     fetchSelectedPokemon();
   }, [user]);
 
+  useEffect(() => {
+    const fetchUnlockedAchievements = async () => {
+      if (user) {
+        try {
+          const userAchievements = await getAchievements(user.uid);
+          setAchievementsUnlocked(userAchievements);
+        } catch {
+          console.error("Error fetching user achievements");
+        }
+      }
+    };
+    fetchUnlockedAchievements();
+  }, [user]);
+
+  useEffect(() => {
+    const checkAchievements = async () => {
+      if (user) {
+        const unlocked = achievements.filter((achievement) =>
+          achievement.criteria(shinyCounter, selectedPokemon)
+        );
+        const newlyUnlocked = unlocked.filter(
+          (achievement) => !achievementsUnlocked.includes(achievement.id)
+        );
+        const noLongerUnlocked = achievementsUnlocked.filter(
+          (id) => !unlocked.some((achievement) => achievement.id === id)
+        );
+
+        if (newlyUnlocked.length > 0) {
+          newlyUnlocked.forEach((achievement) => {
+            showAchievementPopup(achievement);
+            addAchievement(user.uid, achievement.id);
+          });
+        }
+
+        if (noLongerUnlocked.length > 0) {
+          for (const achievementId of noLongerUnlocked) {
+            await removeAchievement(user.uid, achievementId);
+          }
+        }
+
+        setAchievementsUnlocked((prev) => [
+          ...prev.filter((id) => !noLongerUnlocked.includes(id)),
+          ...newlyUnlocked.map((a) => a.id),
+        ]);
+      }
+    };
+
+    checkAchievements();
+  }, [shinyCounter, selectedPokemon]);
+
   return (
     <div className="container mx-auto p-4 mt-20">
       {user ? (
         <>
           <div className="bg-forestGreenMedium text-orange-300 p-5 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between rounded">
-            <h1 className="text-2xl font-bold text-left">
-              {user.displayName}'s ShinyDex
-            </h1>
-            <p>
-              Collected: {shinyCounter} / {pokemonGoShinyIds.length}{" "}
-            </p>
+            <div className="flex flex-col items-center justify-center">
+              <h1 className="text-2xl font-bold text-left">
+                {user.displayName}'s ShinyDex
+              </h1>
+              <button
+                className="text-orange-300 hover:underline mt-2 font-semibold"
+                onClick={() => setShowAchievements(!showAchievements)}
+              >
+                {showAchievements ? "Hide Achievements" : "View Achievements"}
+              </button>
+            </div>
+            <div className="flex flex-col items-center justify-center ml-12">
+              <p className="font-semibold">
+                Collected: {shinyCounter} / {pokemonGoShinyIds.length}
+              </p>
+              <button
+                className="text-orange-300 hover:underline mt-2 font-semibold"
+                onClick={() => {
+                  setViewSelected(!viewSelected);
+                  setDropdownVisible(false);
+                  setPokemonFilter("");
+                }}
+              >
+                {viewSelected ? "View All Pokémon" : "View Selected Pokémon"}
+              </button>
+            </div>
             <div className="relative mt-4 md:mt-0 flex items-center gap-2">
               <button
                 className={`px-4 py-2 rounded text-white dark:text-white ${
@@ -223,14 +539,14 @@ export default function PokemonList() {
                 Clear Filters
               </button>
               {dropdownVisible && (
-                <div className="absolute top-full mt-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-10">
+                <div className="absolute top-full mt-2 bg-white rounded-lg shadow-lg z-10 overflow-hidden">
                   {Object.keys(pokemonGenerations).map((gen) => (
                     <button
                       key={gen}
-                      className={`block w-full text-left px-4 py-2 ${
+                      className={`block w-full text-center px-9 py-2 ${
                         pokemonFilter === gen
-                          ? "bg-green-500 text-white dark:bg-green-500 dark:text-white"
-                          : "bg-orange-400 text-white dark:bg-orange-400 dark:text-white"
+                          ? "bg-green-500 text-white dark:bg-green-500 dark:text-white border border-black"
+                          : "bg-orange-400 text-white dark:bg-orange-400 dark:text-white border border-black"
                       }`}
                       onClick={() => handleFilter(gen)}
                     >
@@ -241,15 +557,22 @@ export default function PokemonList() {
               )}
             </div>
           </div>
-          {error ? (
+          {showAchievements ? (
+            renderAchievements()
+          ) : error ? (
             <p className="text-center text-red-500">{error}</p>
+          ) : viewSelected ? (
+            renderSelectedPokemon()
           ) : (
             renderPokemon()
+          )}
+          {achievementPopup && (
+            <AchievementPopup achievement={achievementPopup} />
           )}
         </>
       ) : (
         <>
-          <h1 className="text-2xl font-bold text-center mb-10 text-black">
+          <h1 className="text-2xl font-bold text-center mt-5 mb-5 text-black">
             ShinyDex
           </h1>
           <p className="text-center text-black">
